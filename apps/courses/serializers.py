@@ -4,7 +4,11 @@ from .models import Course, Lesson
 
 
 class LessonSerializer(serializers.ModelSerializer):
+    course_id = serializers.SerializerMethodField(read_only=True)
     duration_minutes = serializers.IntegerField(read_only=True)
+
+    def get_course_id(self, obj: Lesson):
+        return obj.course_id
 
     class Meta:
         model = Lesson
@@ -29,12 +33,12 @@ class CourseSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class BasicCourseSerializer(serializers.ModelSerializer):
-    lessons = serializers.SerializerMethodField(read_only=True)
+class BaseCourseSerializer(serializers.ModelSerializer):
+    num_lessons = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Course
-        exclude = ['difficulty']
+        fields = ['id', 'name', 'banner', 'featured', 'num_lessons']
 
-    def get_lessons(self, object):
-        return object.lessons.count()
+    def get_num_lessons(self, obj: Course):
+        return obj.lessons.count()
