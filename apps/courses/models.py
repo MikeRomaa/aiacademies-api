@@ -32,6 +32,7 @@ class Course(models.Model):
 
 class Lesson(models.Model):
     course = models.ForeignKey(Course, models.CASCADE, related_name='lessons')
+    number = models.IntegerField(default=0)
     title = models.CharField(max_length=255)
     duration = models.DurationField()
     points = models.IntegerField()
