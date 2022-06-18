@@ -1,7 +1,10 @@
+import json
 import math
 from datetime import timedelta
 
 from django.db import models
+
+from apps.oauth.models import User
 
 
 class Difficulties(models.IntegerChoices):
@@ -44,3 +47,49 @@ class Lesson(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class QuizQuestion(models.Model):
+    context = models.TextField(blank=True, null=True)
+    question = models.CharField(max_length=255)
+    multiple_choice = models.BooleanField(default=False)
+    choices = models.TextField(blank=True, null=True)  # Newline Separated
+    correct_answer = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.question
+
+
+class Quiz(models.Model):
+    class Meta:
+        verbose_name_plural = 'Quizzes'
+
+    course = models.ForeignKey(Course, models.CASCADE, related_name='quizzes')
+    number = models.IntegerField(default=0)
+    title = models.CharField(max_length=255)
+    questions = models.ManyToManyField(QuizQuestion)
+
+    def __str__(self):
+        return self.title
+
+
+class QuizAttempt(models.Model):
+    user = models.ForeignKey(User, models.CASCADE, related_name='quiz_attempts')
+    quiz = models.ForeignKey(Quiz, models.CASCADE, related_name='attempts')
+    answers = models.TextField()  # JSON Encoded
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    @property
+    def score(self):
+        questions = self.quiz.questions.all()
+        answers = json.loads(self.answers)
+
+        correct = 0
+        for i, question in enumerate(questions):
+            if answers[str(i)].strip() == question.correct_answer:
+                correct += 1
+
+        return round(correct / len(questions) * 100)
+
+    def __str__(self):
+        return f'{self.user.get_full_name()} - {self.quiz.title} - {self.score}%'
