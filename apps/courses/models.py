@@ -86,8 +86,9 @@ class QuizAttempt(models.Model):
 
         correct = 0
         for i, question in enumerate(questions):
-            if answers[str(i)].strip() == question.correct_answer:
-                correct += 1
+            if str(i) in answers:
+                if answers[str(i)].strip() == question.correct_answer:
+                    correct += 1
 
         return round(correct / len(questions) * 100)
 
