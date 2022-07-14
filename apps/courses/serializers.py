@@ -14,7 +14,7 @@ class LessonSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Lesson
-        exclude = ['number', 'course', 'duration']
+        exclude = ['course', 'duration']
 
 
 class BasicLessonSerializer(serializers.ModelSerializer):
