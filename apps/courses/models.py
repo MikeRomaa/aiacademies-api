@@ -68,6 +68,7 @@ class Quiz(models.Model):
     number = models.IntegerField(default=0)
     title = models.CharField(max_length=255)
     questions = models.ManyToManyField(QuizQuestion)
+    timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.title

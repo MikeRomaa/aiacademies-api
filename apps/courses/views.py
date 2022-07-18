@@ -64,10 +64,10 @@ class ReviewQuizAttemptView(views.APIView):
         if not self.request.user.is_authenticated:
             self.permission_denied(self.request, 'Permission Denied', 401)
 
-        try:
-            attempt = self.queryset.get(quiz_id=quiz_id, user=request.user)
-        except ObjectDoesNotExist:
+        query = self.queryset.filter(quiz_id=quiz_id, user=request.user)
+        if query.count() > 0:
+            attempt = query.order_by('-timestamp').first()
+            serializer = QuizAttemptSerializer(attempt)
+            return Response(serializer.data)
+        else:
             raise exceptions.NotFound()
-
-        serializer = QuizAttemptSerializer(attempt)
-        return Response(serializer.data)
