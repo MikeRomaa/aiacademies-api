@@ -52,8 +52,3 @@ class User(AbstractUser):
     username = None
 
     email = models.EmailField('Email Address', blank=False, null=False, unique=True)
-    ethnicity = models.CharField('Ethnicity', max_length=255, choices=EthnicityChoices.choices, default=EthnicityChoices.PREFER_NOT_TO_ANSWER)
-    gender = models.CharField('Gender', max_length=255, choices=GenderChoices.choices, default=GenderChoices.PREFER_NOT_TO_ANSWER)
-    experience = models.IntegerField('Experience', blank=True, null=True)
-    birth_year = models.IntegerField('Birth Year', blank=True, null=True)
-    city_state = models.CharField('City/State', max_length=255, blank=True, null=True)
