@@ -1,12 +1,11 @@
-from django.shortcuts import render, redirect
-from .forms import FeedbackForm
+from rest_framework import generics
+from .models import Feedback
+from .serializers import FeedbackSerializer
 
-def feedback_view(request):
-    if request.method == 'POST':
-        form = FeedbackForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('feedback_thanks')  # Redirect to a thank-you page or similar
-    else:
-        form = FeedbackForm()
-    return render(request, 'feedback.html', {'form': form})
+class FeedbackListCreateAPIView(generics.ListCreateAPIView):
+    queryset = Feedback.objects.all()
+    serializer_class = FeedbackSerializer
+
+class FeedbackDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Feedback.objects.all()
+    serializer_class = FeedbackSerializer
