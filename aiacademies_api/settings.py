@@ -73,6 +73,7 @@ INSTALLED_APPS = [
     'apps.oauth',
     'apps.blog',
     'apps.courses',
+    'apps.feedback',
 ]
 
 MIDDLEWARE = [
