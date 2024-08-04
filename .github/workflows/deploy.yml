@@ -8,7 +8,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@2
       - name: Upload
         uses: appleboy/ssh-action@v1.0.3
         with:
