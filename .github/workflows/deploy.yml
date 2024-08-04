@@ -17,7 +17,6 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           port: 22
           use_insecure_cipher: true
-          debug: true
           script: |
             cd api
             source venv/bin/activate
