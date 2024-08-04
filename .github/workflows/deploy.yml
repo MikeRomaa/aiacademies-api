@@ -12,9 +12,9 @@ jobs:
       - name: Upload
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
+          host: ${{ secrets.SSH_HOST }}
           port: 22
           use_insecure_cipher: true
           script: |
