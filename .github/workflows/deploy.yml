@@ -9,29 +9,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Setup SSH key
-        uses: webfactory/ssh-agent@v0.5.3
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-      - name: Unset Git Proxy
-        run: |
-          unset GIT_PROXY_COMMAND
-
-      - name: Debug Environment
-        run: |
-          pwd
-          ls -la
-          cd api
-          ls -la
-          source venv/bin/activate
-          which python
-          python --version
-
+        uses: actions/checkout@master
       - name: Upload
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
@@ -46,7 +26,3 @@ jobs:
             pip install -r requirements.txt
             python manage.py migrate
             sudo systemctl restart gunicorn
-          timeout: 30s
-          command_timeout: 10m
-          proxy_port: 22
-          proxy_timeout: 30s
