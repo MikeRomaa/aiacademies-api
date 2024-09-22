@@ -24,6 +24,22 @@ class LessonInstanceView(generics.RetrieveAPIView):
     serializer_class = LessonSerializer
     lookup_url_kwarg = 'lesson_id'
 
+    def get(self, request, *args, **kwargs):
+        lesson = self.get_object()
+        course = lesson.course
+        next_lesson = course.lessons.filter(number__gt=lesson.number).order_by('number').first()
+
+        response_data = self.get_serializer(lesson).data
+        if next_lesson:
+            response_data['next_lesson'] = {
+                'id': next_lesson.id,
+                'title': next_lesson.title
+            }
+        else:
+            response_data['next_lesson'] = None
+
+        return Response(response_data)
+
 
 class QuizInstanceView(views.APIView):
     queryset = Quiz.objects.all()
@@ -38,21 +54,19 @@ class QuizInstanceView(views.APIView):
 
     def get(self, request, quiz_id):
         quiz = self.get_quiz(quiz_id)
-        serializer = self.serializer_class(quiz)
+        course = quiz.course
+        next_quiz = course.quizzes.filter(number__gt=quiz.number).order_by('number').first()
 
-        return Response(serializer.data)
+        response_data = self.serializer_class(quiz).data
+        if next_quiz:
+            response_data['next_quiz'] = {
+                'id': next_quiz.id,
+                'title': next_quiz.title
+            }
+        else:
+            response_data['next_quiz'] = None
 
-    def post(self, request, quiz_id):
-        if not self.request.user.is_authenticated:
-            self.permission_denied(self.request, 'Permission Denied', 401)
-
-        QuizAttempt(
-            user=request.user,
-            quiz=self.get_quiz(quiz_id),
-            answers=json.dumps(request.data),
-        ).save()
-
-        return Response()
+        return Response(response_data)
 
 
 class ReviewQuizAttemptView(views.APIView):
