@@ -1,13 +1,11 @@
 import json
-from itertools import chain
-from operator import attrgetter
-
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import generics, views, exceptions
 from rest_framework.response import Response
 
 from .models import Course, Lesson, Quiz, QuizAttempt
 from .serializers import BaseCourseSerializer, CourseSerializer, LessonSerializer, QuizSerializer, QuizAttemptSerializer
+
 
 class CourseListCreateView(generics.ListAPIView):
     queryset = Course.objects.all()
@@ -28,35 +26,26 @@ class LessonInstanceView(generics.RetrieveAPIView):
     def get(self, request, *args, **kwargs):
         lesson = self.get_object()
         course = lesson.course
-
-        # Combine lessons and quizzes, order by 'number'
-        lessons = course.lessons.all()
-        quizzes = course.quizzes.all()
-        content = sorted(chain(lessons, quizzes), key=attrgetter('number'))
-
-        # Find current item position in the ordered content
-        current_index = next(i for i, item in enumerate(content) if item.id == lesson.id and isinstance(item, Lesson))
-
-        # Get the next content, if any
-        next_content = content[current_index + 1] if current_index < len(content) - 1 else None
+        next_lesson = course.lessons.filter(number__gt=lesson.number).order_by('number').first()
 
         response_data = self.get_serializer(lesson).data
-
-        if next_content:
-            if isinstance(next_content, Lesson):
-                response_data['next_content'] = {
-                    'type': 'lesson',
-                    'id': next_content.id,
-                    'title': next_content.title,
-                }
-            elif isinstance(next_content, Quiz):
+        if next_lesson:
+            response_data['next_content'] = {
+                'type': 'lesson',
+                'id': next_lesson.id,
+                'title': next_lesson.title
+            }
+        else:
+            # You might want to check for quizzes next if there are no lessons
+            next_quiz = course.quizzes.filter(number__gt=lesson.number).order_by('number').first()
+            if next_quiz:
                 response_data['next_content'] = {
                     'type': 'quiz',
-                    'id': next_content.id,
-                    'title': next_content.title,
+                    'id': next_quiz.id,
+                    'title': next_quiz.title
                 }
-        else:
-            response_data['next_content'] = None
+            else:
+                response_data['next_content'] = None
 
         return Response(response_data)
 
@@ -75,33 +64,22 @@ class QuizInstanceView(views.APIView):
     def get(self, request, quiz_id):
         quiz = self.get_quiz(quiz_id)
         course = quiz.course
-
-        # Combine lessons and quizzes, order by 'number'
-        lessons = course.lessons.all()
-        quizzes = course.quizzes.all()
-        content = sorted(chain(lessons, quizzes), key=attrgetter('number'))
-
-        # Find current item position in the ordered content
-        current_index = next(i for i, item in enumerate(content) if item.id == quiz.id and isinstance(item, Quiz))
-
-        # Get the next content, if any
-        next_content = content[current_index + 1] if current_index < len(content) - 1 else None
+        next_quiz = course.quizzes.filter(number__gt=quiz.number).order_by('number').first()
+        next_lesson = course.lessons.filter(number__gt=quiz.number).order_by('number').first()
 
         response_data = self.serializer_class(quiz).data
-
-        if next_content:
-            if isinstance(next_content, Lesson):
-                response_data['next_content'] = {
-                    'type': 'lesson',
-                    'id': next_content.id,
-                    'title': next_content.title,
-                }
-            elif isinstance(next_content, Quiz):
-                response_data['next_content'] = {
-                    'type': 'quiz',
-                    'id': next_content.id,
-                    'title': next_content.title,
-                }
+        if next_quiz:
+            response_data['next_content'] = {
+                'type': 'quiz',
+                'id': next_quiz.id,
+                'title': next_quiz.title
+            }
+        elif next_lesson:
+            response_data['next_content'] = {
+                'type': 'lesson',
+                'id': next_lesson.id,
+                'title': next_lesson.title
+            }
         else:
             response_data['next_content'] = None
 
