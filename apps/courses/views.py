@@ -27,25 +27,16 @@ class LessonInstanceView(generics.RetrieveAPIView):
         lesson = self.get_object()
         course = lesson.course
         next_lesson = course.lessons.filter(number__gt=lesson.number).order_by('number').first()
+        next_quiz = course.quizzes.filter(number__gt=lesson.number).order_by('number').first()
 
         response_data = self.get_serializer(lesson).data
-        if next_lesson:
-            response_data['next_content'] = {
-                'type': 'lesson',
-                'id': next_lesson.id,
-                'title': next_lesson.title
-            }
-        else:
-            # You might want to check for quizzes next if there are no lessons
-            next_quiz = course.quizzes.filter(number__gt=lesson.number).order_by('number').first()
-            if next_quiz:
-                response_data['next_content'] = {
-                    'type': 'quiz',
-                    'id': next_quiz.id,
-                    'title': next_quiz.title
-                }
-            else:
-                response_data['next_content'] = None
+        response_data['next_content'] = (
+            {'id': next_lesson.id, 'title': next_lesson.title} 
+            if next_lesson 
+            else {'id': next_quiz.id, 'title': next_quiz.title} 
+            if next_quiz 
+            else None
+        )
 
         return Response(response_data)
 
@@ -68,20 +59,13 @@ class QuizInstanceView(views.APIView):
         next_lesson = course.lessons.filter(number__gt=quiz.number).order_by('number').first()
 
         response_data = self.serializer_class(quiz).data
-        if next_quiz:
-            response_data['next_content'] = {
-                'type': 'quiz',
-                'id': next_quiz.id,
-                'title': next_quiz.title
-            }
-        elif next_lesson:
-            response_data['next_content'] = {
-                'type': 'lesson',
-                'id': next_lesson.id,
-                'title': next_lesson.title
-            }
-        else:
-            response_data['next_content'] = None
+        response_data['next_content'] = (
+            {'id': next_lesson.id, 'title': next_lesson.title} 
+            if next_lesson 
+            else {'id': next_quiz.id, 'title': next_quiz.title} 
+            if next_quiz 
+            else None
+        )
 
         return Response(response_data)
 
