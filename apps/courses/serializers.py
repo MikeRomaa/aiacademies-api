@@ -1,9 +1,6 @@
 import json
-
 from rest_framework import serializers
-
 from .models import Course, Lesson, Quiz, QuizQuestion, QuizAttempt
-
 
 class LessonSerializer(serializers.ModelSerializer):
     course_id = serializers.SerializerMethodField(read_only=True)
@@ -85,15 +82,31 @@ class QuizAttemptSerializer(serializers.ModelSerializer):
         fields = ['id', 'questions', 'answers', 'score']
 
 
+# New Content Serializer to combine lessons and quizzes
+class CourseContentSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    number = serializers.IntegerField()
+    title = serializers.CharField()
+    type = serializers.CharField()
+
 class CourseSerializer(serializers.ModelSerializer):
-    lessons = BasicLessonSerializer(many=True, read_only=True)
-    quizzes = BasicQuizSerializer(many=True, read_only=True)
+    contents = serializers.SerializerMethodField(read_only=True)
     total_duration = serializers.IntegerField(read_only=True)
     enrolled = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Course
-        fields = '__all__'
+        fields = ['id', 'name', 'contents', 'total_duration', 'enrolled']
+
+    def get_contents(self, obj: Course):
+        # Get all lessons and quizzes
+        lessons = obj.lessons.all().values('id', 'number', 'title').annotate(type=serializers.CharField(default='lesson'))
+        quizzes = obj.quizzes.all().values('id', 'number', 'title').annotate(type=serializers.CharField(default='quiz'))
+
+        # Combine them and sort by 'number'
+        combined_contents = sorted(list(lessons) + list(quizzes), key=lambda x: x['number'])
+
+        return CourseContentSerializer(combined_contents, many=True).data
 
 
 class BaseCourseSerializer(serializers.ModelSerializer):
