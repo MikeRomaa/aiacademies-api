@@ -29,28 +29,29 @@ class LessonInstanceView(generics.RetrieveAPIView):
         next_lesson = course.lessons.filter(number__gt=lesson.number).order_by('number').first()
         next_quiz = course.quizzes.filter(number__gt=lesson.number).order_by('number').first()
 
+        next_content = None
+        if next_lesson:
+            next_content = {
+                'type': 'lesson',
+                'id': next_lesson.id,
+                'title': next_lesson.title
+            }
+        elif next_quiz:
+            next_content = {
+                'type': 'quiz',
+                'id': next_quiz.id,
+                'title': next_quiz.title
+            }
+
         response_data = self.get_serializer(lesson).data
-        response_data['next_content'] = (
-            {'id': next_lesson.id, 'title': next_lesson.title} 
-            if next_lesson 
-            else {'id': next_quiz.id, 'title': next_quiz.title} 
-            if next_quiz 
-            else None
-        )
+        response_data['next_content'] = next_content
 
         return Response(response_data)
-
 
 class QuizInstanceView(views.APIView):
     queryset = Quiz.objects.all()
     serializer_class = QuizSerializer
     lookup_url_kwarg = 'quiz_id'
-
-    def get_quiz(self, quiz_id):
-        try:
-            return self.queryset.get(id=quiz_id)
-        except ObjectDoesNotExist:
-            raise exceptions.NotFound()
 
     def get(self, request, quiz_id):
         quiz = self.get_quiz(quiz_id)
@@ -58,17 +59,24 @@ class QuizInstanceView(views.APIView):
         next_quiz = course.quizzes.filter(number__gt=quiz.number).order_by('number').first()
         next_lesson = course.lessons.filter(number__gt=quiz.number).order_by('number').first()
 
+        next_content = None
+        if next_quiz:
+            next_content = {
+                'type': 'quiz',
+                'id': next_quiz.id,
+                'title': next_quiz.title
+            }
+        elif next_lesson:
+            next_content = {
+                'type': 'lesson',
+                'id': next_lesson.id,
+                'title': next_lesson.title
+            }
+
         response_data = self.serializer_class(quiz).data
-        response_data['next_content'] = (
-            {'id': next_lesson.id, 'title': next_lesson.title} 
-            if next_lesson 
-            else {'id': next_quiz.id, 'title': next_quiz.title} 
-            if next_quiz 
-            else None
-        )
+        response_data['next_content'] = next_content
 
         return Response(response_data)
-
 
 class ReviewQuizAttemptView(views.APIView):
     queryset = QuizAttempt.objects.all()
