@@ -5,10 +5,10 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from .models import Course, Lesson, Quiz, QuizAttempt
 from .serializers import (
-    CourseSerializer, 
-    BaseCourseSerializer, 
-    LessonSerializer, 
-    QuizSerializer, 
+    CourseSerializer,
+    BaseCourseSerializer,
+    LessonSerializer,
+    QuizSerializer,
     QuizAttemptSerializer
 )
 
@@ -20,6 +20,7 @@ class CourseListCreateView(generics.ListCreateAPIView):
     def get_queryset(self):
         # Prefetch related lessons and quizzes to optimize queries
         return Course.objects.prefetch_related('lessons', 'quizzes').all()
+
 
 # Retrieve a single course with full details, including lessons and quizzes
 class CourseInstanceView(generics.RetrieveAPIView):
@@ -39,7 +40,7 @@ class CourseInstanceView(generics.RetrieveAPIView):
 
         # Combine lessons and quizzes into a sorted content list
         content = sorted(
-            lesson_serializer.data + quiz_serializer.data, 
+            lesson_serializer.data + quiz_serializer.data,
             key=lambda item: item['number']
         )
 
@@ -170,4 +171,4 @@ def get_next_content(request, course_id, current_number):
         return Response({'detail': 'No more content.'}, status=status.HTTP_404_NOT_FOUND)
 
     except Course.DoesNotExist:
-        return Response({'detail': 'Course not found.'}, status=status.HTTP_404_NOT_FOUND
+        return Response({'detail': 'Course not found.'}, status=status.HTTP_404_NOT_FOUND)
