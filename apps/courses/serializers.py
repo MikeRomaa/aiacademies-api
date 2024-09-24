@@ -89,6 +89,7 @@ class CourseContentSerializer(serializers.Serializer):
     title = serializers.CharField()
     type = serializers.CharField()
 
+
 class CourseSerializer(serializers.ModelSerializer):
     contents = serializers.SerializerMethodField(read_only=True)
     total_duration = serializers.IntegerField(read_only=True)
