@@ -1,3 +1,5 @@
+# models.py
+
 import json
 import math
 from datetime import timedelta
@@ -23,11 +25,14 @@ class Course(models.Model):
 
     @property
     def enrolled(self):
-        return 0
+        return self.enrolled_users.count()  # Assuming a related name 'enrolled_users'
 
     @property
     def total_duration(self):
-        return math.ceil(sum([lesson.duration for lesson in self.lessons.all()], timedelta()).seconds / 3600)
+        total = timedelta()
+        for lesson in self.lessons.all():
+            total += lesson.duration
+        return math.ceil(total.total_seconds() / 3600)
 
     def __str__(self):
         return self.name
@@ -91,7 +96,7 @@ class QuizAttempt(models.Model):
                 if answers[str(i)].strip() == question.correct_answer:
                     correct += 1
 
-        return round(correct / len(questions) * 100)
+        return round((correct / len(questions)) * 100) if questions else 0
 
     def __str__(self):
         return f'{self.user.get_full_name()} - {self.quiz.title} - {self.score}%'
