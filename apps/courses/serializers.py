@@ -1,3 +1,5 @@
+# serializers.py
+
 import json
 
 from rest_framework import serializers
@@ -29,7 +31,7 @@ class QuizQuestionSerializer(serializers.ModelSerializer):
     choices = serializers.SerializerMethodField(read_only=True)
 
     def get_choices(self, obj: QuizQuestion):
-        return obj.choices.split('\n')
+        return obj.choices.split('\n') if obj.choices else []
 
     class Meta:
         model = QuizQuestion
@@ -78,7 +80,7 @@ class QuizAttemptSerializer(serializers.ModelSerializer):
         return serializer.data
 
     def get_answers(self, obj: QuizAttempt):
-        return json.loads(obj.answers)
+        return json.loads(obj.answers) if obj.answers else {}
 
     class Meta:
         model = QuizAttempt
